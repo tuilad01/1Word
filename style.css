@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css?family=Cabin');
+
+body{
+    background-color: #303952;
+    font-family: 'Cabin', sans-serif;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 70px);
+}
+.card {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    height: 70px;
+    width: 100%;
+    /* background-color: grey; */
+}
+
+.translate {
+    display: none;
+}
+
+.name, .translate {
+    color: #fff;
+    font-size: 2em;
+}
