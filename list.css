@@ -23,8 +23,7 @@ h4 {
     border: 1px solid #ced4da;
     transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
 }
-.title {
-    width: 698px;
+.title {    
     text-align: left;
     border-radius: 5px;
     padding-left: 10px;
@@ -50,11 +49,38 @@ h4 {
     border-radius: 50%;
     width: 25px;
     height: 25px;
+}
 
+.container-list .list-group {
+    height: 500px;
+    overflow: auto;
 
 }
+
+
 @media (min-width: 768px) {
-    .container > ul, .container > div {
+    /* .container > ul, .container > div {
         width: 698px;
-    }
+    } */
 }
+
+
+    /* width */
+    ::-webkit-scrollbar {
+        width: 10px;
+        }
+    
+        /* Track */
+        ::-webkit-scrollbar-track {
+        background: #f1f1f1; 
+        }
+    
+        /* Handle */
+        ::-webkit-scrollbar-thumb {
+        background: #888; 
+        }
+    
+        /* Handle on hover */
+        ::-webkit-scrollbar-thumb:hover {
+        background: #555; 
+        }
