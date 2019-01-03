@@ -14,7 +14,7 @@ h4 {
     color: #fff;
 }
 
-.container > ul, .container > div, .container > form {
+.container > ul, .container > div {
     width: 100%;
 }
 
@@ -23,7 +23,6 @@ h4 {
     border: 1px solid #ced4da;
     transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
 }
-
 .title {
     display: flex;
     flex-direction: row;
@@ -32,7 +31,6 @@ h4 {
     padding-left: 10px;
     min-width: 315px;
 }
-
 .title > div, .title button {
     margin-bottom: 2px;
 }
@@ -97,15 +95,33 @@ h4 {
 
 /* End Sidenav */
 
+
 .container-list .list-group {
     height: 500px;
     overflow: auto;
 
 }
 
-.form-container {
-    border-radius: .25rem;
-    background-color: #34495e;
+.scrollable {
+    overflow-x: auto;  
+}
+.scrollable > div {
+    min-width: 315px;
+}
+
+.grid-col-2{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-column-gap: 20px;
+}
+.textarea-box {
+    min-height: 400px;
+}
+
+.container-box {
+    padding: 1.5em;
+    border: solid #f7f7f9;
+    border-radius: 5px;
 }
 
 @media (min-width: 768px) {
@@ -114,23 +130,23 @@ h4 {
     } */
 }
 
-
     /* width */
     ::-webkit-scrollbar {
-        width: 10px;
-        }
-    
-        /* Track */
-        ::-webkit-scrollbar-track {
-        background: #f1f1f1; 
-        }
-    
-        /* Handle */
-        ::-webkit-scrollbar-thumb {
-        background: #888; 
-        }
-    
-        /* Handle on hover */
-        ::-webkit-scrollbar-thumb:hover {
-        background: #555; 
-        }
+    width: 10px;
+    height: 5px;
+    }
+
+    /* Track */
+    ::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+    }
+
+    /* Handle */
+    ::-webkit-scrollbar-thumb {
+    background: #888; 
+    }
+
+    /* Handle on hover */
+    ::-webkit-scrollbar-thumb:hover {
+    background: #555; 
+    }

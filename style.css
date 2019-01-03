@@ -11,7 +11,7 @@ body{
     align-items: center;
     height: calc(100vh - 70px);
 }
-.card {
+.i-card {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -28,4 +28,65 @@ body{
 .name, .translate {
     color: #fff;
     font-size: 2em;
+}
+
+.arrow-group {
+    /* position: fixed;
+    width: 100vw;
+    height: 100vh; */
+}
+
+.arrow-group > .fa-angle-right {
+    display: none;
+    position: absolute;
+    right: 10px;
+    top: calc(50% - 48px);
+}
+
+.arrow-group > .fa-angle-left {
+    display: none;
+    position: absolute;
+    left: 10px;
+    top: calc(50% - 48px);
+}
+
+.arrow-group > .fa-angle-up {
+    display: none;
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    right: 50%;
+}
+
+.arrow-group > .fa-angle-down {
+    display: none;
+    position: absolute;
+    bottom: 10px;
+    left:50%;
+    right: 50%;
+}
+
+.group-exit-button {
+    display: grid;
+    grid-row-gap: 10px;
+}
+.group-show {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.group-show > div {
+    margin: 2em 1em;
+}
+.word-mean { 
+    display: none;
+    color: #c0392b;
+}
+
+.button-show-group {
+    position: fixed;
+    top: 10px;
+    right: 10px;
 }
