@@ -1,0 +1,142 @@
+=================manifest.json=================
+
+{
+    "name": "Store Words",
+    "version": "1.0",
+    "description": "Build an Extension!",
+    "manifest_version": 2,
+    "background": {
+        "scripts": [
+            "background.js"
+        ],
+        "persistent": false
+    },
+    "page_action": {
+        "default_icon": "store_image.png",
+        "default_popup": "store_image.html"
+    },
+    "permissions": [
+        "tabs",
+        "storage",
+        "declarativeContent",
+        "contextMenus",
+        "activeTab"
+    ],
+    "icons": {
+        "16": "store_image.png"
+    }
+}
+
+
+====================background.js============
+
+
+
+chrome.runtime.onInstalled.addListener(function() {
+
+    chrome.storage.sync.set({ words: [], means: [] });
+
+    chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
+        chrome.declarativeContent.onPageChanged.addRules([{
+            conditions: [new chrome.declarativeContent.PageStateMatcher({
+                pageUrl: { urlMatches: '.' },
+            })],
+            actions: [new chrome.declarativeContent.ShowPageAction()]
+        }]);
+    });
+
+    chrome.contextMenus.create({
+        id: "storeword_name",
+        title: "Name",
+        type: 'normal',
+        contexts: ['selection']
+    });
+
+    chrome.contextMenus.create({
+        id: "storeword_mean",
+        title: "Mean",
+        type: 'normal',
+        contexts: ['selection']
+    });
+
+    chrome.contextMenus.create({
+        id: "storeword_reset",
+        title: "Reset store word",
+        type: 'normal',
+        contexts: ['page']
+    });
+
+    chrome.contextMenus.onClicked.addListener(function(info, tab) {
+        if (info.menuItemId === "storeword_name") {
+            chrome.storage.sync.get('words', function(data) {
+                if (data && data.words) {
+                    data.words.push(info.selectionText);
+                    chrome.storage.sync.set({ words: data.words });
+                }
+            });
+        }
+
+        if (info.menuItemId === "storeword_mean") {
+            chrome.storage.sync.get('means', function(data) {
+                if (data && data.means) {
+                    data.means.push(info.selectionText);
+                    chrome.storage.sync.set({ means: data.means });
+                }
+            });
+        }
+
+        if (info.menuItemId === "storeword_reset") {
+            chrome.storage.sync.set({ words: [], means: [] });
+        }
+        return true;
+    });
+});
+
+
+======================store_image.html============================
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <style>
+        main {
+            width: 400px;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <p id="pa--word">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quas ea minus maxime reprehenderit nobis, impedit, reiciendis exercitationem facilis similique officiis nisi itaque provident a iusto aspernatur repellendus, vel expedita magnam.</p>
+        <p id="pa--mean">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Blanditiis animi delectus rerum neque, voluptatem laudantium necessitatibus culpa quod ullam perferendis excepturi laboriosam, eveniet sit. Hic tenetur dolorum ad quia perferendis.</p>
+    </main>
+</body>
+<script src="popup.js"></script>
+
+</html>
+
+
+===============================popup.js=======================================
+
+const elementWord = document.getElementById("pa--word"),
+    elementMean = document.getElementById("pa--mean");
+
+chrome.storage.sync.get('words', function(data) {
+    if (data && data.words) {
+        elementWord.innerText = data.words.join(", ");
+    }
+});
+
+chrome.storage.sync.get('means', function(data) {
+    if (data && data.means) {
+        elementMean.innerText = data.means.join(", ");
+    }
+});
+
+
