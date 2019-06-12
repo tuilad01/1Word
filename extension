@@ -1,4 +1,5 @@
-=================manifest.json=================
+
+===================manifest.json======================
 
 {
     "name": "Store Words",
@@ -11,6 +12,11 @@
         ],
         "persistent": false
     },
+    "content_scripts": [{
+        "matches": ["<all_urls>"],
+        "css": ["myStyles.css"],
+        "js": ["contentScript.js"]
+    }],
     "page_action": {
         "default_icon": "store_image.png",
         "default_popup": "store_image.html"
@@ -20,17 +26,28 @@
         "storage",
         "declarativeContent",
         "contextMenus",
-        "activeTab"
+        "activeTab",
+        "<all_urls>"
     ],
     "icons": {
         "16": "store_image.png"
+    },
+    "commands": {
+        "toggle-feature-save": {
+            "suggested_key": {
+                "windows": "Alt+Shift+S"
+            },
+            "description": "Toggle feature save"
+        },
+        "_execute_page_action": {
+            "suggested_key": {
+                "windows": "Alt+Shift+Z"
+            }
+        }
     }
 }
 
-
-====================background.js============
-
-
+===================background.js======================
 
 chrome.runtime.onInstalled.addListener(function() {
 
@@ -43,6 +60,13 @@ chrome.runtime.onInstalled.addListener(function() {
             })],
             actions: [new chrome.declarativeContent.ShowPageAction()]
         }]);
+    });
+
+    chrome.contextMenus.create({
+        id: "storeword_word_mean",
+        title: "Save",
+        type: 'normal',
+        contexts: ['selection']
     });
 
     chrome.contextMenus.create({
@@ -66,23 +90,66 @@ chrome.runtime.onInstalled.addListener(function() {
         contexts: ['page']
     });
 
+    const showNotificationMessage = function() {
+        chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+            chrome.tabs.sendMessage(tabs[0].id, { commands: "showNotificationMessage" });
+        });
+    }
+
+    const saveWord = function(str) {
+        if (!str) return false;
+
+        str = str.trim().toLowerCase();
+
+        chrome.storage.sync.get('words', function(data) {
+            if (data && data.words) {
+                data.words.push(str);
+                chrome.storage.sync.set({ words: data.words });
+
+            }
+        });
+    }
+
+    const saveMean = function(str) {
+        if (!str) return false;
+
+        str = str.trim().toLowerCase();
+
+        chrome.storage.sync.get('means', function(data) {
+            if (data && data.means) {
+                data.means.push(str);
+                chrome.storage.sync.set({ means: data.means });
+            }
+        });
+    }
+
+    const saveAll = function(str) {
+        if (!str) return false;
+
+        const regex = new RegExp(/(\w+)[\n\s]\w+[\n\s](.+)/, "gmi");
+        const arr = regex.exec(str);
+        if (arr.length === 3) {
+            saveWord(arr[1]);
+            saveMean(arr[2]);
+        }
+    }
+
     chrome.contextMenus.onClicked.addListener(function(info, tab) {
+        if (info.menuItemId === "storeword_word_mean") {
+            if (info.selectionText) {
+                saveAll(info.selectionText);
+                showNotificationMessage();
+            }
+        }
+
         if (info.menuItemId === "storeword_name") {
-            chrome.storage.sync.get('words', function(data) {
-                if (data && data.words) {
-                    data.words.push(info.selectionText);
-                    chrome.storage.sync.set({ words: data.words });
-                }
-            });
+            saveWord(info.selectionText);
+            showNotificationMessage();
         }
 
         if (info.menuItemId === "storeword_mean") {
-            chrome.storage.sync.get('means', function(data) {
-                if (data && data.means) {
-                    data.means.push(info.selectionText);
-                    chrome.storage.sync.set({ means: data.means });
-                }
-            });
+            saveMean(info.selectionText);
+            showNotificationMessage();
         }
 
         if (info.menuItemId === "storeword_reset") {
@@ -90,10 +157,154 @@ chrome.runtime.onInstalled.addListener(function() {
         }
         return true;
     });
+
+    chrome.commands.onCommand.addListener(function(command) {
+        // if (command === "toggle-feature-save") {
+        //     chrome.tabs.executeScript({
+        //         code: "alert(123123);",
+        //         allFrames: true
+        //     }, function(selection) {
+        //         if (selection) {
+        //             alert(JSON.stringify(selection));
+        //         }
+        //     });
+        // }
+        // console.log('Command:', command);
+    });
+
 });
 
+===================contentScript.js======================
 
-======================store_image.html============================
+const container = document.createElement("DIV");
+const notiMessage = document.createElement("DIV");
+const para = document.createElement("P");
+
+container.className = "noti--container";
+notiMessage.className = "noti--message";
+
+para.innerText = "Saved 💾";
+
+notiMessage.append(para);
+
+container.append(notiMessage);
+
+document.getElementsByTagName("body")[0].append(container);
+
+const showNotificationMessage = function() {
+    const elementNotification = document.getElementsByClassName("noti--container")[0];
+    if (!elementNotification) return false;
+
+    elementNotification.style.display = "flex";
+    setTimeout(() => {
+        elementNotification.style.display = "none";
+    }, 2000);
+}
+
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+        if (request.commands == "showNotificationMessage")
+            showNotificationMessage();
+        return true;
+    });
+
+===================myStyles.css======================
+
+.noti--container,
+.noti--message,
+.noti--message>p {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.noti--container {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    background: #ddd;
+    height: 50px;
+    width: 150px;
+    z-index: 99999;
+    opacity: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    animation-name: opacity-notification;
+    animation-duration: 2s;
+}
+
+.noti--message {
+    position: absolute;
+    width: 100%;
+}
+
+.noti--message>p {
+    text-align: center;
+    color: #333;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 20px;
+}
+
+@keyframes opacity-notification {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+===================popup.js======================
+
+const elementWord = document.getElementById("pa--word"),
+    elementMean = document.getElementById("pa--mean");
+
+chrome.storage.sync.get('words', function(data) {
+    if (data && data.words && data.words.length > 0) {
+        elementWord.innerText = data.words.join(", ");
+    } else {
+        elementWord.innerText = "Empty";
+    }
+});
+
+chrome.storage.sync.get('means', function(data) {
+    if (data && data.means && data.means.length > 0) {
+        elementMean.innerText = data.means.join(", ");
+    } else {
+        elementMean.innerText = "Empty";
+    }
+});
+
+const copyToClipboard = function(ele) {
+    /* Get the text field */
+    const copyText = document.createElement('textarea');
+    copyText.setAttribute('readonly', '');
+    copyText.style.position = 'absolute';
+    copyText.style.left = '-9999px';
+    document.body.appendChild(copyText);
+
+    copyText.value = ele.innerText;
+    /* Select the text field */
+    copyText.select();
+
+    /* Copy the text inside the text field */
+    document.execCommand("copy");
+    document.body.removeChild(copyText);
+
+    document.getElementById("pa--notification").style.display = "block";
+    setTimeout(() => {
+        document.getElementById("pa--notification").style.display = "none";
+    }, 2000);
+    // document.getElementById("pa--notification").style.opacity = 1;
+    //return copyText.value;
+}
+
+
+document.getElementById("pa-copy--word").addEventListener("click", copyToClipboard.bind(null, document.getElementById("pa--word")));
+document.getElementById("pa-copy--mean").addEventListener("click", copyToClipboard.bind(null, document.getElementById("pa--word")));
+
+===================store_image.html======================
 
 <!DOCTYPE html>
 <html lang="en">
@@ -108,35 +319,72 @@ chrome.runtime.onInstalled.addListener(function() {
         main {
             width: 400px;
         }
+        
+        .margin-bottom--20 {
+            margin-bottom: 17px !important;
+        }
+        
+        .pa--container {
+            position: relative;
+            border: 0.5px dashed;
+            border-radius: 5px;
+            margin: 5px;
+            padding: 5px;
+        }
+        
+        .pa--container>span {
+            position: absolute;
+            top: -10px;
+            right: -5px;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0.9;
+        }
+        
+        .pa--container>span:hover {
+            font-size: 21px;
+            opacity: 1;
+        }
+        
+        #pa--notification {
+            text-align: center;
+            opacity: 0;
+            display: none;
+            animation-name: opacity-notification;
+            animation-duration: 2s;
+        }
+        
+        @keyframes opacity-notification {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 
 <body>
     <main>
-        <p id="pa--word">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quas ea minus maxime reprehenderit nobis, impedit, reiciendis exercitationem facilis similique officiis nisi itaque provident a iusto aspernatur repellendus, vel expedita magnam.</p>
-        <p id="pa--mean">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Blanditiis animi delectus rerum neque, voluptatem laudantium necessitatibus culpa quod ullam perferendis excepturi laboriosam, eveniet sit. Hic tenetur dolorum ad quia perferendis.</p>
+        <div id="pa--notification">
+            <p>Text copied 👌</p>
+        </div>
+
+
+        <div class="pa--container margin-bottom--20">
+            <span id="pa-copy--word">📋</span>
+
+            <p id="pa--word">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quas ea minus maxime reprehenderit nobis, impedit, reiciendis exercitationem facilis similique officiis nisi itaque provident a iusto aspernatur repellendus, vel expedita magnam.</p>
+        </div>
+
+        <div class="pa--container">
+            <span id="pa-copy--mean">📋</span>
+
+            <p id="pa--mean">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Blanditiis animi delectus rerum neque, voluptatem laudantium necessitatibus culpa quod ullam perferendis excepturi laboriosam, eveniet sit. Hic tenetur dolorum ad quia perferendis.</p>
+        </div>
     </main>
 </body>
 <script src="popup.js"></script>
 
 </html>
-
-
-===============================popup.js=======================================
-
-const elementWord = document.getElementById("pa--word"),
-    elementMean = document.getElementById("pa--mean");
-
-chrome.storage.sync.get('words', function(data) {
-    if (data && data.words) {
-        elementWord.innerText = data.words.join(", ");
-    }
-});
-
-chrome.storage.sync.get('means', function(data) {
-    if (data && data.means) {
-        elementMean.innerText = data.means.join(", ");
-    }
-});
-
-
