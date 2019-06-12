@@ -92,7 +92,9 @@ chrome.runtime.onInstalled.addListener(function() {
 
     const showNotificationMessage = function() {
         chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-            chrome.tabs.sendMessage(tabs[0].id, { commands: "showNotificationMessage" });
+            if (tabs[0].id) {
+                chrome.tabs.sendMessage(tabs[0].id, { commands: "showNotificationMessage" });
+            }
         });
     }
 
@@ -128,7 +130,7 @@ chrome.runtime.onInstalled.addListener(function() {
 
         const regex = new RegExp(/(\w+)[\n\s]\w+[\n\s](.+)/, "gmi");
         const arr = regex.exec(str);
-        if (arr.length === 3) {
+        if (arr && arr.length && arr.length === 3) {
             saveWord(arr[1]);
             saveMean(arr[2]);
         }
